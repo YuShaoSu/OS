@@ -85,6 +85,7 @@ int main(){
 	
 	// timing function 1
 	gettimeofday(&tv1, NULL);
+	printf("Without using pthread:\n");
 	
 ///	BmpImage input_pic = bmpReader->ReadBMP(INPUT_IMAGE);
 
@@ -128,7 +129,7 @@ int main(){
 
 	// TODO: add your pthread codes to speed up the program
 	gettimeofday(&tv1, NULL);
-
+	printf("Using pthread:\n");
 
 	para arg2= { input_pic , newWidth, newHeight, 60, 0.45, 0.45, 0};
 	para arg_k0 = { input_pic, newWidth, newHeight, 45, 0.3, 0.6, 0};
@@ -172,7 +173,6 @@ int main(){
 
 BmpImage bilinear(BmpImage pic, int newWidth, int newHeight)
 {
-	printf("bilinear\n");
 	unsigned char* data	= (unsigned char*)malloc(3 * newWidth * newHeight * sizeof(unsigned char));
 
 	for(int i = 0 ; i < newWidth; i++){
@@ -212,8 +212,6 @@ BmpImage bilinear(BmpImage pic, int newWidth, int newHeight)
 
 void bilinear_k(BmpImage pic, int newWidth, int newHeight, int k)
 {
-	printf("bilinear\n");
-
 	for(int i = 0 ; i < newWidth; i++){
 		for(int j = 0;j < newHeight; j++){
 			//k is RGB color, R = 2, G = 1, B = 0
@@ -243,7 +241,6 @@ void bilinear_k(BmpImage pic, int newWidth, int newHeight, int k)
 
 BmpImage rotation(BmpImage pic,int nw,int nh, double angle_ar)
 {
-	printf("rotation\n");
 	unsigned char* data	= (unsigned char*)malloc(3 * nw * nh * sizeof(unsigned char));
 	
 	int w_offset = (int)(nw / 2);
@@ -285,8 +282,6 @@ BmpImage rotation(BmpImage pic,int nw,int nh, double angle_ar)
 
 void rotation_k(BmpImage pic,int nw,int nh, double angle_ar, int k)
 {
-	printf("rotation\n");
-	
 	int w_offset = (int)(nw / 2);
 	int h_offset = (int)(nh / 2);
 	
@@ -316,8 +311,6 @@ void rotation_k(BmpImage pic,int nw,int nh, double angle_ar, int k)
 
 BmpImage shear_vertical(BmpImage pic, int nw, int nh, double sv)
 {
-	printf("shear vertical\n");
-	
 	unsigned char* data	= (unsigned char*)malloc(3 * nw * nh * sizeof(unsigned char));
 
 	for(int i = 0 ; i < nw ; i++){
@@ -351,8 +344,6 @@ BmpImage shear_vertical(BmpImage pic, int nw, int nh, double sv)
 
 BmpImage shear_horizontal(BmpImage pic, int nw, int nh, double sh)
 {
-	printf("shear horizontal\n");
-	
 	unsigned char* data	= (unsigned char*)malloc(3 * nw * nh * sizeof(unsigned char));
 
 	for(int i = 0 ; i < nw ; i++){
