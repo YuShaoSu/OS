@@ -18,6 +18,7 @@ BmpImage input_pic = bmpReader->ReadBMP(INPUT_IMAGE);
 int newWidth = (int)(input_pic.width * BILINEAR_RATIO);
 int newHeight = (int)(input_pic.height * BILINEAR_RATIO);
 unsigned char* data_bi	= (unsigned char*)malloc(3 * newWidth * newHeight * sizeof(unsigned char));
+unsigned char* data_ro	= (unsigned char*)malloc(3 * newWidth * newHeight * sizeof(unsigned char));
 
 BmpImage bilinear(BmpImage pic, int nw, int nh);
 BmpImage rotation(BmpImage pic, int nw,int nh, double angle_ar);
@@ -25,6 +26,7 @@ BmpImage shear_vertical(BmpImage pic, int nw, int nh, double sv);
 BmpImage shear_horizontal(BmpImage pic, int nw, int nh, double sh);
 
 void bilinear_k(BmpImage pic, int nw, int nh, int k);
+void rotation_k(BmpImage pic, int nw,int nh, double angle_ar, int k);
 // TODO: add your pthread codes to speed up the program
 struct para {
 	BmpImage pic;
@@ -49,11 +51,6 @@ void *bilinear_p(void *arg){
 	pthread_exit(0);
 }
 
-void *rotationa_up(void *arg){
-	para arg_use = *(para *) arg;
-	bmpReader -> WriteBMP(OUT_IMAGE[1], rotation(arg_use.pic, arg_use.nw, arg_use.nh, arg_use.fun_ro));
-	pthread_exit(0);
-}
 
 void *rotation_p(void *arg){
 	para arg_use = *(para *) arg;
@@ -133,47 +130,30 @@ int main(){
 	gettimeofday(&tv1, NULL);
 
 
-	para arg2;
+	para arg2= { input_pic , newWidth, newHeight, 60, 0.45, 0.45, 0};
 	para arg_k0 = { input_pic, newWidth, newHeight, 45, 0.3, 0.6, 0};
 	para arg_k1 = { input_pic, newWidth, newHeight, 45, 0.3, 0.6, 1};
 	para arg_k2 = { input_pic, newWidth, newHeight, 45, 0.3, 0.6, 2};
-/*	arg_k0.pic = input_pic;
-	arg_k0.nw = newWidth;
-	arg_k0.nh = newHeight;	
-	arg_k0.fun_ro = 45;
-	arg_k0.fun_sv = 0.3;
-	arg_k0.fun_sh = 0.6;
-	arg_k0.k = 0;
-*/
-	arg2.nw = newWidth;
-	arg2.nh = newHeight;
-	arg2.fun_ro = 60;
-	arg2.fun_sv = 0.45;
-	arg2.fun_sh = 0.45;
-	arg2.k = 0;
 
+	//seperate RGB to speed up bilinear
 	pthread_create(&p[0], NULL, bilinear_p, (void*) &arg_k0);
 	pthread_create(&p[5], NULL, bilinear_p, (void*) &arg_k1);
 	pthread_create(&p[6], NULL, bilinear_p, (void*) &arg_k2);
-
-
 	pthread_join(p[0], NULL);
 	pthread_join(p[5], NULL);
 	pthread_join(p[6], NULL);
-
 	bilinear_pic.data = data_bi;
 	bilinear_pic.width = newWidth;
 	bilinear_pic.height = newHeight;
-	
 	arg_k0.pic = bilinear_pic;	
 	arg2.pic = bilinear_pic;	
 
+	//other image procsssing
 	pthread_create(&p[1], NULL, rotation_p, (void*) &arg_k0);
 	pthread_create(&p[2], NULL, shear_ver_p, (void*) &arg_k0);
 	pthread_create(&p[3], NULL, shear_hor_p, (void*) &arg_k0);
 	pthread_create(&p[4], NULL, mix_p, (void*) &arg2 );
 	pthread_create(&p[7], NULL, bilinear_write_p, (void*) &arg2 );
-
 	pthread_join(p[1], NULL);
 	pthread_join(p[2], NULL);
 	pthread_join(p[3], NULL);
@@ -303,6 +283,36 @@ BmpImage rotation(BmpImage pic,int nw,int nh, double angle_ar)
 	return newBmpImage;
 }
 
+void rotation_k(BmpImage pic,int nw,int nh, double angle_ar, int k)
+{
+	printf("rotation\n");
+	
+	int w_offset = (int)(nw / 2);
+	int h_offset = (int)(nh / 2);
+	
+	for(int i = 0 ; i < nw; i++){
+		for(int j = 0; j < nh; j++){
+				double angle = (double)angle_ar * M_PI / 180.0;
+				double cos_theta = cos(angle);    
+				double sin_theta = sin(angle);
+				int relevant_w = i - w_offset;
+				int relevant_h = j - h_offset;
+				int trans_w = (int)(relevant_w * cos_theta - relevant_h * sin_theta) + w_offset;
+				int trans_h = (int)(relevant_h * cos_theta + relevant_w * sin_theta) + h_offset;
+				
+				int pixel;
+				
+				if (trans_w >= 0 && trans_w < w_offset * 2 && trans_h >= 0 && trans_h < h_offset * 2){
+					pixel = pic.data[3 * (trans_h * 2 * w_offset + trans_w) + k];
+				}else{
+					pixel = 0;
+				}
+				
+				data_ro[3 * (j * nw + i) + k] = pixel;
+		}
+	}
+	
+}
 
 BmpImage shear_vertical(BmpImage pic, int nw, int nh, double sv)
 {
