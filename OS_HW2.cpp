@@ -36,6 +36,12 @@ void *bilinear_write_p(void *arg){
 	bmpReader->WriteBMP(OUT_IMAGE[0], bilinear_pic);
 }
 
+void *rotationa_up(void *arg){
+	para arg_use = *(para *) arg;
+	bmpReader -> WriteBMP(OUT_IMAGE[1], rotation(arg_use.pic, arg_use.nw, arg_use.nh, arg_use.fun_ro));
+	pthread_exit(0);
+}
+
 void *rotation_p(void *arg){
 	para arg_use = *(para *) arg;
 	bmpReader -> WriteBMP(OUT_IMAGE[1], rotation(arg_use.pic, arg_use.nw, arg_use.nh, arg_use.fun_ro));
@@ -65,6 +71,7 @@ void *mix_p(void *arg){
 int main(){
 	
 	struct timeval  tv1, tv2;
+	double elTime1, elTime2;
 	
 	// timing function 1
 	gettimeofday(&tv1, NULL);
@@ -105,7 +112,8 @@ int main(){
 	gettimeofday(&tv2, NULL);
 	
 	// TODO: modify (ID) to your student ID
-	printf("0516016 %f seconds\n", (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec)); 
+	elTime1 = (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
+	printf("0516016 %f seconds\n", elTime1); 
 	
 	// TODO: add your pthread codes to speed up the program
 	gettimeofday(&tv1, NULL);
@@ -143,8 +151,9 @@ int main(){
 
 	gettimeofday(&tv2, NULL);
 
-	printf("0516016 %f seconds\n", (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec)); 
-	
+	elTime2 = (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
+	printf("0516016 %f seconds\n", elTime2); 
+	printf("The speed up rate is %f\n", elTime1 / elTime2);
 	return 0;
 } 
 
